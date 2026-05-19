@@ -1,32 +1,36 @@
 #include "types.h"
 #include "stat.h"
 #include "user.h"
+#include "memlayout.h"
 
-int main(int argc, char **argv){
-	int pid;
-	int ppid;
-	int mypid;
+void test5(int n){
+	if(n>0)
+		test5(n-1);
+	printf(1, "");
+}
 
-	setnice(1, 19);
-	setnice(getpid(), 10);
+int
+main(int argc, char **argv)
+{
+	int ppid, pid;
+
+	// stack growth after growing process size
+	printf(1, "[Test5, stack growth after growing process size]\n");
+
+	printf(1, "================================== Result=================================\n");
+
+	sbrk(10000);
 
 	ppid = getpid();
 	pid = fork();
 
-	if(pid == 0){
-		printf(1, "##### State 2 #####\n");
-		setnice(ppid, 2);
-		printf(1, "##### State 4 #####\n");
+	if(pid==0){
+		test5(500);
+		printf(1, "PASSED!\n");
+		kill(ppid);
+		exit();
 	}
-	else{
-		printf(1, "##### State 1 #####\n");
-		setnice(pid, 5);
-		printf(1, "##### State 3 #####\n");
-	}
-
-	mypid = getpid();
-	printf(1, "PID %d is finished\n", mypid);
-
+	wait();
+	printf(1, "FAIL\n");
 	exit();
 }
-

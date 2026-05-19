@@ -2,28 +2,28 @@
 #include "stat.h"
 #include "user.h"
 
-int main(int argc, char **argv){
-	int pid;
-	int mypid;
 
-	setnice(1, 19);
-	setnice(getpid(), 2);
-
-	pid = fork();
-
-	if(pid == 0){
-		printf(1, "##### State 2 #####\n");
+void test3(int n){
+	if(n > 0){
+		test3(n - 1);
 	}
-	else{
-		setnice(pid, 5);
-		printf(1, "##### State 1 #####\n");
-		sleep(100);
-		printf(1, "##### State 3 #####\n");
-	}
-
-	mypid = getpid();
-	printf(1, "PID %d is finished\n", mypid);
-
+	if(n == 0)	printf(1, "PASSED!\n");
 	exit();
 }
 
+int main(int argc, char *argv[]){
+	int pid;
+
+	printf(1, "[Test3, stack can grow for 4 pages?]\n");
+
+	printf(1, "================================== Result=================================\n");
+
+	pid = fork();
+	
+	if(pid == 0)	test3(384);
+	else	wait();
+
+	printf(1, "==========================================================================\n");
+
+	exit();	
+}

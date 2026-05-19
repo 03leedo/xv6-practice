@@ -248,6 +248,36 @@ allocuvm(pde_t *pgdir, uint oldsz, uint newsz)
   return newsz;
 }
 
+int
+allocuvm_stack(pde_t *pgdir, uint stackbottom, uint stacktop) {
+  char *mem;
+  uint a;
+  
+  // page table entry들을 만들기 위해 walkpgdir 호출
+  // 단, 실제 physical page는 top page만 할당
+  for(a = stackbottom; a < stacktop; a += PGSIZE){
+    if(a == stacktop - PGSIZE){
+      mem = kalloc();
+      if(mem == 0)
+        return -1;
+
+      memset(mem, 0, PGSIZE);
+
+      if(mappages(pgdir, (char*)a, PGSIZE, V2P(mem), PTE_W | PTE_U) < 0){
+        kfree(mem);
+        return -1;
+      }
+    } else {
+      // physical page는 아직 할당하지 않음
+      // page table page만 필요하면 walkpgdir로 PTE 자리 생성
+      if(walkpgdir(pgdir, (char*)a, 1) == 0)
+        return -1;
+    }
+  }
+
+  return 0;
+}
+
 // Deallocate user pages to bring the process size from oldsz to
 // newsz.  oldsz and newsz need not be page-aligned, nor does newsz
 // need to be less than oldsz.  oldsz can be larger than the actual
@@ -326,7 +356,7 @@ copyuvm(pde_t *pgdir, uint sz)
     if((pte = walkpgdir(pgdir, (void *) i, 0)) == 0)
       panic("copyuvm: pte should exist");
     if(!(*pte & PTE_P))
-      panic("copyuvm: page not present");
+      continue;
     pa = PTE_ADDR(*pte);
     flags = PTE_FLAGS(*pte);
     if((mem = kalloc()) == 0)
@@ -391,4 +421,40 @@ copyout(pde_t *pgdir, uint va, void *p, uint len)
 // Blank page.
 //PAGEBREAK!
 // Blank page.
+
+void
+pagefault(void)
+{
+  struct proc *p = myproc();
+  uint addr = rcr2();
+  uint va = PGROUNDDOWN(addr);
+  uint next = p->stacktop - (p->stackpages + 1) * PGSIZE;
+
+  if(va >= p->stackbottom && va == next && p->stackpages < 4){
+    char *mem = kalloc();
+
+    if(mem == 0){
+      cprintf("[Pagefault] Invalid access!\n");
+      p->killed = 1;
+      return;
+    }
+
+    memset(mem, 0, PGSIZE);
+
+    if(mappages(p->pgdir, (char*)va, PGSIZE, V2P(mem), PTE_W | PTE_U) < 0){
+      kfree(mem);
+      cprintf("[Pagefault] Invalid access!\n");
+      p->killed = 1;
+      return;
+    }
+
+    p->stackpages++;
+    lcr3(V2P(p->pgdir));
+
+    cprintf("[Pagefault] Allocate new page!\n");
+  } else {
+    cprintf("[Pagefault] Invalid access!\n");
+    p->killed = 1;
+  }
+}
 

@@ -50,6 +50,9 @@ struct proc {
   struct inode *cwd;           // Current directory
   char name[16];               // Process name (debugging)
   int nice;
+  uint stacktop; // stack virtual range의 가장 위
+  uint stackbottom; // stack virtual range의 가장 아래, stacktop - 4*PGSIZE
+  uint stackpages; // 현재 실제 할당된 stack page 수
 };
 
 // Process memory is laid out contiguously, low addresses first:

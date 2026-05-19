@@ -1,38 +1,24 @@
 #include "types.h"
 #include "stat.h"
 #include "user.h"
+#include "memlayout.h"
 
-int main(int argc, char **argv){
-	int pid1;
-	int pid2;
-	int mypid;
+int main(int argc, char *argv[]){
+	int pid;
 
-	setnice(1, 19);
-	setnice(getpid(), 2);
+	printf(1, "[Test1, try invalid access]\n");
 
-	pid1 = fork();
+	printf(1, "================================== Result=================================\n");
 
-	if(pid1 == 0){	//Child
-		printf(1, "##### State 4 #####\n");
-	}
-	else{			//Parent
-		setnice(pid1, 10);
-		printf(1, "##### State 1 #####\n");
-
-		pid2 = fork();
-
-		if(pid2 == 0){	//Grand-Child
-			printf(1, "##### State 3 #####\n");
-		}
-		else{			//Parent
-			setnice(pid2, 5);
-			printf(1, "##### State 2 #####\n");
-		}
+	pid = fork();
+	
+	if(pid == 0){
+		*(char *)(KERNBASE + 50000) += 10;
 	}
 
-	mypid = getpid();
-	printf(1, "PID %d is finished\n", mypid);
+	else	wait();
 
-	exit();
+	printf(1, "==========================================================================\n");
+
+	exit();	
 }
-

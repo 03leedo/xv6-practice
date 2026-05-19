@@ -2,28 +2,29 @@
 #include "stat.h"
 #include "user.h"
 
-int main(int argc, char **argv){
-	int pid;
-	int mypid;
 
-	setnice(1, 19);
-	setnice(getpid(), 2);
-
-	pid = fork();
-
-	if(pid == 0){	//Child
-		printf(1, "##### State 2 #####\n");
+void test2(int n){
+	if(n > 0){
+		test2(n - 1);
 	}
-	else{			//Parent
-		setnice(pid, 10);	//Set nice value of Child
-		printf(1, "##### State 1 #####\n");
-		wait();				//Scheduling
-		printf(1, "##### State 3 #####\n");
-	}
-
-	mypid = getpid();
-	printf(1, "PID %d is finished\n", mypid);
+	if(n == 0)	printf(1, "PASSED!\n");
 
 	exit();
 }
 
+int main(int argc, char *argv[]){
+	int pid;
+
+	printf(1, "[Test2, stack can grow for 1 page?]\n");
+
+	printf(1, "================================== Result=================================\n");
+
+	pid = fork();
+	
+	if(pid == 0)	test2(128);
+	else	wait();
+
+	printf(1, "==========================================================================\n");
+
+	exit();	
+}
