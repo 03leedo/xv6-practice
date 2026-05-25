@@ -118,3 +118,9 @@ sys_yield(void) {
   yield();
   return 0;
 }
+
+int
+sys_freemem(void)
+{
+  return freemem();
+}

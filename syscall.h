@@ -25,3 +25,4 @@
 #define SYS_getnice 24
 #define SYS_ps 25
 #define SYS_yield 26
+#define SYS_freemem 27

@@ -28,6 +28,7 @@ int setnice(int, int);
 int getnice(int);
 void ps(int);
 int yield(void);
+int freemem(void);
 
 // ulib.c
 int stat(const char*, struct stat*);
